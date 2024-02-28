@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="UTF-8">
+    <title>Viz Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+            background: #222;
+            color: white;
+            overflow: auto;
+        }
+        #preset-list div:hover{
+            background: #444;
+        }
+        #preset-list div.selected{
+            background: #2a2;
+        }
+    </style>
+</head>
+<body>
+    <div id="preset-list"></div>
+
+    <script>
+        const presetList = document.querySelector("#preset-list")
+
+        window.ctrl.on("presets-ready", presets => {
+            presetList.childNodes.forEach(e => e.remove())
+            presets.map(preset => {
+                let newElem = document.createElement("div")
+                newElem.textContent = preset
+                presetList.append(newElem)
+            })
+        })
+        window.ctrl.on("preset-select", presetIndex => {
+            presetList.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"))
+            let preset = presetList.childNodes.item(presetIndex)
+            if(preset) {
+                preset.classList.add("selected")
+                preset.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                })
+            }
+        })
+    </script>
+</body>
+</html>

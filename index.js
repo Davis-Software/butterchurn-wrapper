@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, desktopCapturer } = require("electron")
+const { openControlWin, controlWinWrapper } = require("./back/controlWin")
 const path = require("path");
 
 
@@ -19,7 +20,9 @@ function MainWindow () {
         }
     })
 
-    win.loadFile(path.join(__dirname, "index.html")).then()
+    win.loadFile(path.join(__dirname, "templates", "index.html")).then(() => {
+        controlWinWrapper(win, openControlWin())
+    })
 }
 app.whenReady().then(MainWindow)
 app.on('activate', () => {

@@ -7,3 +7,9 @@ contextBridge.exposeInMainWorld("ipc", {
 contextBridge.exposeInMainWorld("onReady", listener => {
     ipcRenderer.on("ready", () => listener())
 })
+
+
+contextBridge.exposeInMainWorld("ctrl", {
+    on: (e, listener) => ipcRenderer.on(e, (_, data) => listener(data)),
+    send: (e, data) => ipcRenderer.send("ctrl", {channel: e, message: data})
+})

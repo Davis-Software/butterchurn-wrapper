@@ -23,7 +23,7 @@ class ButterChurnViz{
         this.sourceNode = null
         this.cycleInterval = null
         this.presets = {
-            // ...butterchurnPresets.getPresets(),
+            ...butterchurnPresets.getPresets(),
             ...butterchurnPresetsExtra.getPresets(),
             ...butterchurnPresetsExtra2.getPresets()
         }
@@ -36,6 +36,18 @@ class ButterChurnViz{
         this.presetRatings = {}
         this.canvas = (typeof canvasSelector === "string") ? document.querySelector(canvasSelector) : canvasSelector
         this.debugElement = (typeof debugSelector === "string") ? document.querySelector(debugSelector) : debugSelector
+        this.listeners = {}
+    }
+    callListener(event, data){
+        if(this.listeners[event] && this.listeners[event].length > 0){
+            this.listeners[event].forEach(e => e(data))
+        }
+    }
+    on(event, listener){
+        if(!this.listeners[event]){
+            this.listeners[event] = []
+        }
+        this.listeners[event].push(listener)
     }
     loadCustomPresetWeights(callback){
         fetch("https://interface.software-city.org/butter-churn").then(res => res.json()).then(data => {
@@ -62,6 +74,7 @@ class ButterChurnViz{
     }
     sortByCustomRatings(){
         this.presetKeys = Object.keys(this.presets).sort((a, b) => this.presets[b].rating - this.presets[a].rating)
+        this.callListener("presets-ready", this.presetKeys)
     }
     updateDebugInfo(){
         if(this.debugElement && sessionStorage.getItem("debug") === "true"){
@@ -174,6 +187,7 @@ class ButterChurnViz{
         }
 
         this.visualizer.loadPreset(this.presets[this.presetKeys[this.presetIndex]], blendTime)
+        this.callListener("preset-select", this.presetIndex)
     }
     prevPreset(blendTime = 5.7) {
         let numPresets = this.presetKeys.length

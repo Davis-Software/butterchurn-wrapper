@@ -10,8 +10,8 @@ module.exports = {
         new HtmlWebpackPlugin({
             publicPath: "./bundle",
             scriptLoading: "blocking",
-            template: __dirname + "/../../index.template.html",
-            filename: __dirname + "/../../index.html",
+            template: __dirname + "/../../templates/index.template.html",
+            filename: __dirname + "/../../templates/index.html",
             inject: false,
             minify: false
         })

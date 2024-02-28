@@ -2,6 +2,6 @@ bundle/
 node_modules/
 .idea/
 package-lock.json
-index.html
+templates/index.html
 dist/
 build/

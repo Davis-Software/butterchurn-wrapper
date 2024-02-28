@@ -22,6 +22,13 @@ window.onReady(() => {
     console.info("done")
 
     visualizer.startPlayer("capture")
+
+    visualizer.on("presets-ready", presetKeys => {
+        window.ctrl.send("presets-ready", presetKeys)
+    })
+    visualizer.on("preset-select", presetIndex => {
+        window.ctrl.send("preset-select", presetIndex)
+    })
 })
 
 

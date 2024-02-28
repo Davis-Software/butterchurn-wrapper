@@ -14,7 +14,7 @@ function MainWindow () {
         darkTheme: true,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
-            nodeIntegration: true,
+            nodeIntegration: true
         }
     })
 
@@ -38,9 +38,9 @@ function testIsReady(){
 }
 function sendSourceData(){
     // weird fix for crash
-    desktopCapturer.getSources({types: ['window']}).then(() => {
+    desktopCapturer.getSources({types: ["window"]}).then(() => {
         // send desktop id to font-end
-        desktopCapturer.getSources({types: ['screen']}).then(sources => {
+        desktopCapturer.getSources({types: ["screen"]}).then(sources => {
             win.webContents.send('SET_SOURCE', sources[0].id)
             sendReady()
         })

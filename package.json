@@ -6,9 +6,17 @@
     "private": true,
     "main": "index.js",
     "scripts": {
-        "start": "electron --trace-warnings ."
+        "start": "electron --trace-warnings .",
+        "dist": "electron-builder --x64 --win"
     },
     "devDependencies": {
-        "electron": "^29.1.0"
+        "electron": "^29.1.0",
+        "electron-builder": "^24.12.0"
+    },
+    "build": {
+        "appId": "org.software-city.other.viz",
+        "win": {
+            "target": "nsis"
+        }
     }
 }

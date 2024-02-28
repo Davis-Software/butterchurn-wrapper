@@ -28,7 +28,7 @@ window.onReady(() => {
 document.addEventListener("keydown", e => {
     switch(e.key){
         case "d":
-            sessionStorage.setItem("debug", sessionStorage.getItem("debug") !== "true")
+            sessionStorage.setItem("debug", (sessionStorage.getItem("debug") !== "true").toString())
             break;
 
         case "Escape":

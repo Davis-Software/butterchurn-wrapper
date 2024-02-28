@@ -31,7 +31,15 @@ document.addEventListener("keydown", e => {
             sessionStorage.setItem("debug", (sessionStorage.getItem("debug") !== "true").toString())
             break;
 
+        case "f":
+            canvas.requestFullscreen()
+            break;
+
         case "Escape":
+            document.exitFullscreen()
+            break;
+
+        case "s":
             if(visualizer || visualizer.rendering){
                 visualizer.stopRender()
                 visualizer = null

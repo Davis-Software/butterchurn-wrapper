@@ -1,0 +1,16 @@
+*, root, body{
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+div.debug{
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    color: white;
+    display: flex;
+    flex-direction: column;
+}

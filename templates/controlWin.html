@@ -80,6 +80,14 @@
                     <input type="checkbox" id="check-auto-switch-penalize">
                     Penalize last preset
                 </label>
+                <label>
+                    Cycle Time (ms):
+                    <input type="number" value="7500" id="input-cycle-time">
+                </label>
+                <label>
+                    Preset blend time (s):
+                    <input type="number" value="3" id="input-blend-time">
+                </label>
             </div>
         </div>
     </div>
@@ -95,6 +103,8 @@
         const autoSwitchRandomCheckbox = document.querySelector("#check-auto-switch-random")
         const autoSwitchWeightedRandomCheckbox = document.querySelector("#check-auto-switch-weighted-random")
         const autoSwitchPenalizeCheckbox = document.querySelector("#check-auto-switch-penalize")
+        const cycleTimeInput = document.querySelector("#input-cycle-time")
+        const blendTimeInput = document.querySelector("#input-blend-time")
 
         // default to checked
         autoScrollCheckbox.checked = true
@@ -141,22 +151,30 @@
             autoSwitchCheckbox,
             autoSwitchRandomCheckbox,
             autoSwitchWeightedRandomCheckbox,
-            autoSwitchPenalizeCheckbox
+            autoSwitchPenalizeCheckbox,
+            cycleTimeInput,
+            blendTimeInput
         ]
         function updateFunc(){
             window.ctrl.sendToWin("settings-change", {
                 presetCycle: autoSwitchCheckbox.checked,
                 presetRandom: autoSwitchRandomCheckbox.checked,
                 weightedRandom: autoSwitchWeightedRandomCheckbox.checked,
-                penalizeSelected: autoSwitchPenalizeCheckbox.checked
+                penalizeSelected: autoSwitchPenalizeCheckbox.checked,
+                presetCycleLength: cycleTimeInput.value,
+                blendTime: blendTimeInput.value
             })
         }
-        updateVars.forEach(checkbox => {
-            checkbox.addEventListener("change", updateFunc)
-            checkbox.addEventListener("change", () => {
-                localStorage.setItem(checkbox.id, checkbox.checked)
+        updateVars.forEach(control => {
+            control.addEventListener("change", updateFunc)
+            control.addEventListener("change", () => {
+                localStorage.setItem(control.id, control.type === "checkbox" ? control.checked : control.value.toString())
             })
-            checkbox.checked = localStorage.getItem(checkbox.id) === "true"
+            if(control.type === "checkbox") {
+                control.checked = localStorage.getItem(control.id) !== null ? localStorage.getItem(control.id) === "true" : false
+            } else {
+                control.value = parseInt(localStorage.getItem(control.id)) || control.value
+            }
         })
         window.ctrl.on("get-settings", updateFunc)
     </script>

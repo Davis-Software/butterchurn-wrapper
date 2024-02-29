@@ -2,6 +2,7 @@ import ButterChurnViz from "./butterchurnViz";
 
 
 const canvas = document.querySelector("canvas")
+const overlay = document.querySelector("div#overlay")
 
 canvas.width = window.outerWidth
 canvas.height = window.outerHeight
@@ -32,6 +33,14 @@ window.onReady(() => {
         visualizer.restartCycleInterval()
     })
     window.ctrl.sendToCtrl("get-settings")
+
+    window.ctrl.on("set-overlay", overlayData => {
+        overlay.innerHTML = overlayData.text
+        overlay.classList.toggle("visible", true)
+        setTimeout(() => {
+            overlay.classList.toggle("visible", false)
+        }, overlayData.duration)
+    })
 })
 
 document.querySelector("div.controls").innerHTML = `

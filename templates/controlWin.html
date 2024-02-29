@@ -89,6 +89,16 @@
                     <input type="number" value="3" id="input-blend-time">
                 </label>
             </div>
+            <hr/>
+            <div>
+                <textarea id="text-overlay" style="width: 100%; height: 50px;" placeholder="Overlay Text Input"></textarea>
+                <label>
+                    Visibility Duration (ms):
+                    <input type="range" value="3000" min="1000" max="10000" step="1000" id="input-overlay-duration">
+                    <span></span>
+                </label><br/>
+                <button id="button-overlay">Set Overlay</button>
+            </div>
         </div>
     </div>
 
@@ -105,6 +115,9 @@
         const autoSwitchPenalizeCheckbox = document.querySelector("#check-auto-switch-penalize")
         const cycleTimeInput = document.querySelector("#input-cycle-time")
         const blendTimeInput = document.querySelector("#input-blend-time")
+        const overlayInput = document.querySelector("#text-overlay")
+        const overlayButton = document.querySelector("#button-overlay")
+        const overlayDurationInput = document.querySelector("#input-overlay-duration")
 
         // default to checked
         autoScrollCheckbox.checked = true
@@ -177,6 +190,16 @@
             }
         })
         window.ctrl.on("get-settings", updateFunc)
+
+        overlayButton.addEventListener("click", () => {
+            window.ctrl.sendToWin("set-overlay", {
+                text: overlayInput.value,
+                duration: overlayDurationInput.value
+            })
+        })
+        overlayDurationInput.addEventListener("input", () => {
+            overlayDurationInput.nextElementSibling.textContent = overlayDurationInput.value + "ms"
+        })
     </script>
 </body>
 </html>

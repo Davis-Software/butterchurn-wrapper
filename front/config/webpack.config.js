@@ -8,7 +8,7 @@ module.exports = {
 
     plugins: [
         new HtmlWebpackPlugin({
-            publicPath: "./bundle",
+            publicPath: "../bundle",
             scriptLoading: "blocking",
             template: __dirname + "/../../templates/index.template.html",
             filename: __dirname + "/../../templates/index.html",

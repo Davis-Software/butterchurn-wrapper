@@ -32,12 +32,19 @@ window.onReady(() => {
         visualizer.restartCycleInterval()
     })
     window.ctrl.sendToCtrl("get-settings")
-
-    visualizer.startPlayer("capture")
 })
 
-
+document.querySelector("div.controls").innerHTML = `
+    Controls:
+    d: toggle debug
+    f: fullscreen
+    Esc: exit fullscreen
+    c: capture audio
+    m: use mic
+    s: stop rendering
+`.replace(/\n/g, "<br>")
 document.addEventListener("keydown", e => {
+    document.querySelector("div.controls").style.display = "none"
     switch(e.key){
         case "d":
             sessionStorage.setItem("debug", (sessionStorage.getItem("debug") !== "true").toString())
@@ -51,11 +58,15 @@ document.addEventListener("keydown", e => {
             document.exitFullscreen()
             break;
 
-        case "s":
-            if(visualizer || visualizer.rendering){
-                visualizer.stopRender()
-                visualizer = null
-                return
+        case "c":
+            if(visualizer){
+                visualizer.startPlayer("capture")
             }
+            break;
+        case "m":
+            if(visualizer){
+                visualizer.startPlayer("mic")
+            }
+            break;
     }
 })

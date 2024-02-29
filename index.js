@@ -5,7 +5,7 @@ const path = require("path");
 
 app.allowRendererProcessReuse = true
 
-const dataPath = path.join(__dirname, "data")
+const dataPath = path.join(__dirname, "viz-data")
 app.setAppLogsPath(path.join(dataPath, "logs"))
 app.setPath("userData", dataPath)
 app.setPath("appData", dataPath)

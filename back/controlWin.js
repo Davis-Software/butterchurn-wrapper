@@ -11,7 +11,7 @@ function openControlWin(){
             preload: path.join(__dirname, "..", "preload.js"),
             nodeIntegration: true
         },
-        width: 350,
+        width: 350 + 600,
         height: 700
     })
     controlWin.loadFile(path.join(__dirname, "..", "templates", "controlWin.html")).then()
@@ -21,6 +21,9 @@ function openControlWin(){
 function controlWinWrapper(win, ctrlWin){
     ipcMain.on("ctrl", (_, data) => {
         ctrlWin.webContents.send(data.channel, data.message)
+    })
+    ipcMain.on("ctrl-to-win", (_, data) => {
+        win.webContents.send(data.channel, data.message)
     })
 }
 

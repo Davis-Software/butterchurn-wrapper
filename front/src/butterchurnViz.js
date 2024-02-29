@@ -10,7 +10,6 @@ let sourceID = null
 
 window.ipc.onSetSource(s => {
     sourceID = s
-    console.log(`Got source id ${s}`)
 })
 window.ipc.askForSourceID()
 
@@ -21,25 +20,30 @@ class ButterChurnViz{
         this.rendering = false
         this.audioContext = new AudioContext()
         this.sourceNode = null
+
+        // configurable options
         this.cycleInterval = null
+        this.presetCycle = true
+        this.presetCycleLength = 15000
+        this.presetRandom = true
+        this.weightedRandom = false
+        this.penalizeSelected = false
+        this.blendTime = 2.7
         this.presets = {
             ...butterchurnPresets.getPresets(),
             ...butterchurnPresetsExtra.getPresets(),
             ...butterchurnPresetsExtra2.getPresets()
         }
+
         this.presetKeys = []
-        this.presetIndexHist = []
-        this.presetIndex = 0
-        this.presetCycle = true
-        this.presetCycleLength = 15000
-        this.presetRandom = true
+        this.preset = null
         this.presetRatings = {}
         this.canvas = (typeof canvasSelector === "string") ? document.querySelector(canvasSelector) : canvasSelector
         this.debugElement = (typeof debugSelector === "string") ? document.querySelector(debugSelector) : debugSelector
         this.listeners = {}
     }
-    callListener(event, data){
-        if(this.listeners[event] && this.listeners[event].length > 0){
+    _callListener(event, data){
+        if(this.listeners && this.listeners[event] && this.listeners[event].length > 0){
             this.listeners[event].forEach(e => e(data))
         }
     }
@@ -49,7 +53,28 @@ class ButterChurnViz{
         }
         this.listeners[event].push(listener)
     }
-    loadCustomPresetWeights(callback){
+    _updateDebugInfo(){
+        if(this.preset !== null && this.debugElement && sessionStorage.getItem("debug") === "true"){
+            this.debugElement.innerHTML = `
+                <div>Preset Amount: ${this.presetKeys.length}</div>
+                <div>Current Preset: ${this.preset}</div>
+                <div>Preset Rating: ${this.presets[this.preset].rating}</div>
+                <div>Current Preset Index: ${Object.keys(this.presets).indexOf(this.preset)}</div>
+                <hr/>
+                <div>Random Presets: ${this.presetRandom}</div>
+                <div>Weighted Random: ${this.weightedRandom}</div>
+                <div>Penalize Selected: ${this.penalizeSelected}</div>
+                <hr/>
+                <div>Cycle Presets: ${this.presetCycle}</div>
+                <div>Cycle Length: ${this.presetCycleLength}</div>
+            `
+        }else{
+            if(!this.debugElement) return
+            this.debugElement.innerHTML = ""
+        }
+    }
+
+    _loadCustomPresetWeights(callback){
         fetch("https://interface.software-city.org/butter-churn").then(res => res.json()).then(data => {
             for(let preset of data){
                 this.presetRatings[preset.key] = preset.weight
@@ -61,7 +86,7 @@ class ButterChurnViz{
             callback()
         })
     }
-    computeCustomRatings(){
+    _computeCustomRatings(){
         for(let presetKey of Object.keys(this.presets)){
             this.presets[presetKey].rating = this.presets[presetKey].baseVals.rating || 0
         }
@@ -70,29 +95,12 @@ class ButterChurnViz{
                 this.presets[presetKey].rating += this.presetRatings[presetKey]
             }
         }
-        this.sortByCustomRatings()
+        this._sortByCustomRatings()
     }
-    sortByCustomRatings(){
+    _sortByCustomRatings(){
         this.presetKeys = Object.keys(this.presets).sort((a, b) => this.presets[b].rating - this.presets[a].rating)
-        this.callListener("presets-ready", this.presetKeys)
     }
-    updateDebugInfo(){
-        if(this.debugElement && sessionStorage.getItem("debug") === "true"){
-            this.debugElement.innerHTML = `
-                <div>Preset Amount: ${this.presetKeys.length}</div>
-                <div>Current Preset: ${this.presetKeys[this.presetIndex]}</div>
-                <div>Preset Rating: ${this.presets[this.presetKeys[this.presetIndex]].rating}</div>
-                <div>Current Preset Index: ${this.presetIndex}</div>
-                <div>Preset History: ${this.presetIndexHist.join(", ")}</div>
-                <div>Random Presets: ${this.presetRandom}</div>
-                <div>Cycle Presets: ${this.presetCycle}</div>
-                <div>Cycle Length: ${this.presetCycleLength}</div>
-            `
-        }else{
-            if(!this.debugElement) return
-            this.debugElement.innerHTML = ""
-        }
-    }
+
     startRenderer() {
         if(!this.rendering) return
         requestAnimationFrame(() => this.startRenderer())
@@ -101,6 +109,7 @@ class ButterChurnViz{
     stopRender() {
         this.rendering = false
     }
+
     prepareConnect(){
         if (!this.rendering) {
             this.rendering = true
@@ -122,6 +131,7 @@ class ButterChurnViz{
             this.visualizer.connectAudio(gainNode)
         }, (err) => {
             console.error(err)
+            alert("Error getting microphone input")
         })
     }
     connectToAudioCapture() {
@@ -156,9 +166,14 @@ class ButterChurnViz{
             this.sourceNode.connect(gainNode);
 
             this.visualizer.connectAudio(gainNode)
+        }).catch(err => {
+            console.error(err)
+            alert("Error getting desktop audio input")
         })
     }
-    wightedRandomPreset(){
+
+    weightedRandomPreset(){
+        this._sortByCustomRatings()
         let total = _.sumBy(this.presetKeys, presetKey => this.presets[presetKey].rating)
         let random = Math.random() * total
         let sum = 0
@@ -170,35 +185,32 @@ class ButterChurnViz{
         }
         return this.presetKeys[this.presetKeys.length - 1]
     }
-    nextPreset(blendTime = 5.7, weighted=true) {
-        this.presetIndexHist.push(this.presetIndex)
+    nextPreset() {
+        let numPresets = Object.keys(this.presets).length
+        let presetList = Object.keys(this.presets)
+        let newPreset
 
-        let numPresets = this.presetKeys.length
         if (this.presetRandom) {
-            if(weighted){
-                this.presetIndex = this.presetKeys.indexOf(this.wightedRandomPreset())
-                this.presets[this.presetKeys[this.presetIndex]].rating -= 1 // penalize the preset for being selected
-                this.sortByCustomRatings()
+            if(this.weightedRandom){
+                newPreset = this.weightedRandomPreset()
+                if(this.penalizeSelected){
+                    this.presets[newPreset].rating -= 1 // penalize the preset for being selected
+                }
             }else{
-                this.presetIndex = Math.floor(Math.random() * this.presetKeys.length)
+                newPreset = presetList[Math.floor(Math.random() * numPresets)]
             }
         } else {
-            this.presetIndex = (this.presetIndex + 1) % numPresets
+            newPreset = presetList[(presetList.indexOf(this.preset) + 1) % numPresets]
         }
 
-        this.visualizer.loadPreset(this.presets[this.presetKeys[this.presetIndex]], blendTime)
-        this.callListener("preset-select", this.presetIndex)
+        this.setPreset(newPreset)
     }
-    prevPreset(blendTime = 5.7) {
-        let numPresets = this.presetKeys.length
-        if (this.presetIndexHist.length > 0) {
-            this.presetIndex = this.presetIndexHist.pop()
-        } else {
-            this.presetIndex = ((this.presetIndex - 1) + numPresets) % numPresets
-        }
+    setPreset(presetName){
+        this.preset = presetName
+        this.visualizer.loadPreset(this.presets[presetName], this.blendTime)
+        this._callListener("preset-select", presetName)
+    }
 
-        this.visualizer.loadPreset(this.presets[this.presetKeys[this.presetIndex]], blendTime)
-    }
     restartCycleInterval() {
         if (this.cycleInterval) {
             clearInterval(this.cycleInterval)
@@ -206,13 +218,11 @@ class ButterChurnViz{
         }
 
         if (this.presetCycle) {
-            this.cycleInterval = setInterval(() => this.nextPreset(2.7), this.presetCycleLength)
+            this.cycleInterval = setInterval(() => this.nextPreset(), this.presetCycleLength)
         }
     }
     finishInit() {
-        this.computeCustomRatings()
-
-        this.presetIndex = Math.floor(Math.random() * this.presetKeys.length)
+        this._computeCustomRatings()
 
         this.visualizer = butterchurn.createVisualizer(this.audioContext, this.canvas , {
             width: window.outerWidth,
@@ -220,24 +230,18 @@ class ButterChurnViz{
             pixelRatio: window.devicePixelRatio || 1,
             textureRatio: 1,
         })
-        this.nextPreset(0)
-        this.cycleInterval = setInterval(() => this.nextPreset(2.7), this.presetCycleLength)
-        setInterval(() => this.updateDebugInfo(), 1000)
-        document.addEventListener("keydown", (e) => {
-            if (e.key === "ü") {
-                sessionStorage.setItem("debug", sessionStorage.getItem("debug") === "true" ? "false" : "true")
-                this.updateDebugInfo()
-            }
-        })
+        this.nextPreset()
+        this.restartCycleInterval()
+        setInterval(() => this._updateDebugInfo(), 1000)
     }
-    initPlayer(callback) {
-        this.loadCustomPresetWeights(() => {
+    _initPlayer(callback) {
+        this._loadCustomPresetWeights(() => {
             this.finishInit()
             callback()
         })
     }
     startPlayer(inputMode = "mic") {
-        this.initPlayer(() => {
+        this._initPlayer(() => {
             switch(inputMode){
                 case "mic":
                     this.connectToMic()

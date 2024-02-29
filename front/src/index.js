@@ -12,23 +12,28 @@ let visualizer
 window.onReady(() => {
     if (visualizer && visualizer.rendering) return
 
-    console.info("Loading viz")
-
     visualizer = new ButterChurnViz(
         canvas,
         document.querySelector("div.debug")
     )
 
-    console.info("done")
+    window.ctrl.sendToCtrl("presets-ready", visualizer.presets)
+    visualizer.on("preset-select", presetIndex => {
+        window.ctrl.sendToCtrl("preset-select", presetIndex)
+    })
+
+    window.ctrl.on("preset-select", presetIndex => {
+        visualizer.setPreset(presetIndex)
+    })
+    window.ctrl.on("settings-change", settings => {
+        for(let key in settings){
+            visualizer[key] = settings[key]
+        }
+        visualizer.restartCycleInterval()
+    })
+    window.ctrl.sendToCtrl("get-settings")
 
     visualizer.startPlayer("capture")
-
-    visualizer.on("presets-ready", presetKeys => {
-        window.ctrl.send("presets-ready", presetKeys)
-    })
-    visualizer.on("preset-select", presetIndex => {
-        window.ctrl.send("preset-select", presetIndex)
-    })
 })
 
 

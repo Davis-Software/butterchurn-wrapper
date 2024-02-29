@@ -5,3 +5,4 @@ package-lock.json
 templates/index.html
 dist/
 build/
+viz-data/

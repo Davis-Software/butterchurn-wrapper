@@ -11,5 +11,6 @@ contextBridge.exposeInMainWorld("onReady", listener => {
 
 contextBridge.exposeInMainWorld("ctrl", {
     on: (e, listener) => ipcRenderer.on(e, (_, data) => listener(data)),
-    send: (e, data) => ipcRenderer.send("ctrl", {channel: e, message: data})
+    sendToCtrl: (e, data) => ipcRenderer.send("ctrl", {channel: e, message: data}),
+    sendToWin: (e, data) => ipcRenderer.send("ctrl-to-win", {channel: e, message: data})
 })

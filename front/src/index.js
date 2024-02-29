@@ -12,27 +12,39 @@ let visualizer
 window.onReady(() => {
     if (visualizer && visualizer.rendering) return
 
-    console.info("Loading viz")
-
     visualizer = new ButterChurnViz(
         canvas,
         document.querySelector("div.debug")
     )
 
-    console.info("done")
-
-    visualizer.startPlayer("capture")
-
-    visualizer.on("presets-ready", presetKeys => {
-        window.ctrl.send("presets-ready", presetKeys)
-    })
+    window.ctrl.sendToCtrl("presets-ready", visualizer.presets)
     visualizer.on("preset-select", presetIndex => {
-        window.ctrl.send("preset-select", presetIndex)
+        window.ctrl.sendToCtrl("preset-select", presetIndex)
     })
+
+    window.ctrl.on("preset-select", presetIndex => {
+        visualizer.setPreset(presetIndex)
+    })
+    window.ctrl.on("settings-change", settings => {
+        for(let key in settings){
+            visualizer[key] = settings[key]
+        }
+        visualizer.restartCycleInterval()
+    })
+    window.ctrl.sendToCtrl("get-settings")
 })
 
-
+document.querySelector("div.controls").innerHTML = `
+    Controls:
+    d: toggle debug
+    f: fullscreen
+    Esc: exit fullscreen
+    c: capture audio
+    m: use mic
+    s: stop rendering
+`.replace(/\n/g, "<br>")
 document.addEventListener("keydown", e => {
+    document.querySelector("div.controls").style.display = "none"
     switch(e.key){
         case "d":
             sessionStorage.setItem("debug", (sessionStorage.getItem("debug") !== "true").toString())
@@ -46,11 +58,15 @@ document.addEventListener("keydown", e => {
             document.exitFullscreen()
             break;
 
-        case "s":
-            if(visualizer || visualizer.rendering){
-                visualizer.stopRender()
-                visualizer = null
-                return
+        case "c":
+            if(visualizer){
+                visualizer.startPlayer("capture")
             }
+            break;
+        case "m":
+            if(visualizer){
+                visualizer.startPlayer("mic")
+            }
+            break;
     }
 })

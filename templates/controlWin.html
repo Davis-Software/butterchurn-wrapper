@@ -13,39 +13,170 @@
             color: white;
             overflow: auto;
         }
+        .container{
+            display: flex;
+        }
+        #preset-list{
+            height: 100vh;
+            width: 350px;
+            overflow: auto;
+        }
         #preset-list div:hover{
             background: #444;
+            cursor: pointer;
+        }
+        #preset-list div.current{
+            background: #2a2;
         }
         #preset-list div.selected{
-            background: #2a2;
+            background: #33f;
+        }
+        #options{
+            flex-grow: 1;
+            padding: 10px;
+        }
+        #input-selected-preset{
+            width: 100%;
+            padding: 5px;
+            background: #333;
+            color: white;
+            border: none;
+        }
+        div.list{
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
         }
     </style>
 </head>
 <body>
-    <div id="preset-list"></div>
+    <div class="container">
+        <div id="preset-list"></div>
+        <div id="options">
+            <h4>Options</h4>
+            <label>
+                <input type="checkbox" id="check-auto-scroll-current">
+                Auto scroll to current preset
+            </label>
+            <hr/>
+            <label>
+                Selected Preset: <button id="button-selected-preset-switch" disabled>Switch</button>
+                <input type="text" id="input-selected-preset" readonly>
+            </label>
+            <div class="list">
+                <label>
+                    <input type="checkbox" id="check-auto-switch">
+                    Auto switch preset
+                </label>
+                <label>
+                    <input type="checkbox" id="check-auto-switch-random">
+                    Auto switch preset randomly
+                </label>
+                <label>
+                    <input type="checkbox" id="check-auto-switch-weighted-random">
+                    Auto switch preset weighted randomly
+                </label>
+                <label>
+                    <input type="checkbox" id="check-auto-switch-penalize">
+                    Penalize last preset
+                </label>
+                <label>
+                    Cycle Time (ms):
+                    <input type="number" value="7500" id="input-cycle-time">
+                </label>
+                <label>
+                    Preset blend time (s):
+                    <input type="number" value="3" id="input-blend-time">
+                </label>
+            </div>
+        </div>
+    </div>
 
     <script>
+        let presets = {}
         const presetList = document.querySelector("#preset-list")
 
-        window.ctrl.on("presets-ready", presets => {
+        const autoScrollCheckbox = document.querySelector("#check-auto-scroll-current")
+        const selectedPresetSwitchButton = document.querySelector("#button-selected-preset-switch")
+        const selectedPresetInput = document.querySelector("#input-selected-preset")
+        const autoSwitchCheckbox = document.querySelector("#check-auto-switch")
+        const autoSwitchRandomCheckbox = document.querySelector("#check-auto-switch-random")
+        const autoSwitchWeightedRandomCheckbox = document.querySelector("#check-auto-switch-weighted-random")
+        const autoSwitchPenalizeCheckbox = document.querySelector("#check-auto-switch-penalize")
+        const cycleTimeInput = document.querySelector("#input-cycle-time")
+        const blendTimeInput = document.querySelector("#input-blend-time")
+
+        // default to checked
+        autoScrollCheckbox.checked = true
+
+        window.ctrl.on("presets-ready", respPresets => {
             presetList.childNodes.forEach(e => e.remove())
-            presets.map(preset => {
+            presets = respPresets
+
+            Object.keys(presets).map(preset => {
                 let newElem = document.createElement("div")
+
                 newElem.textContent = preset
+                newElem.setAttribute("data-preset", preset)
+                newElem.addEventListener("click", () => {
+                    presetList.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"))
+                    newElem.classList.add("selected")
+                    selectedPresetInput.value = preset
+                    selectedPresetSwitchButton.disabled = false
+                })
+
                 presetList.append(newElem)
             })
         })
-        window.ctrl.on("preset-select", presetIndex => {
-            presetList.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"))
-            let preset = presetList.childNodes.item(presetIndex)
+        window.ctrl.on("preset-select", presetName => {
+            presetList.querySelectorAll(".current").forEach(e => e.classList.remove("current"))
+            let preset = presetList.querySelector(`[data-preset="${presetName}"]`)
             if(preset) {
-                preset.classList.add("selected")
+                preset.classList.remove("selected")
+                preset.classList.add("current")
+                if(!autoScrollCheckbox.checked) return
                 preset.scrollIntoView({
                     behavior: "smooth",
                     block: "center"
                 })
             }
         })
+
+        selectedPresetSwitchButton.addEventListener("click", () => {
+            window.ctrl.sendToWin("preset-select", selectedPresetInput.value)
+        })
+
+
+        const updateVars = [
+            autoSwitchCheckbox,
+            autoSwitchRandomCheckbox,
+            autoSwitchWeightedRandomCheckbox,
+            autoSwitchPenalizeCheckbox,
+            cycleTimeInput,
+            blendTimeInput
+        ]
+        function updateFunc(){
+            window.ctrl.sendToWin("settings-change", {
+                presetCycle: autoSwitchCheckbox.checked,
+                presetRandom: autoSwitchRandomCheckbox.checked,
+                weightedRandom: autoSwitchWeightedRandomCheckbox.checked,
+                penalizeSelected: autoSwitchPenalizeCheckbox.checked,
+                presetCycleLength: cycleTimeInput.value,
+                blendTime: blendTimeInput.value
+            })
+        }
+        updateVars.forEach(control => {
+            control.addEventListener("change", updateFunc)
+            control.addEventListener("change", () => {
+                localStorage.setItem(control.id, control.type === "checkbox" ? control.checked : control.value.toString())
+            })
+            if(control.type === "checkbox") {
+                control.checked = localStorage.getItem(control.id) !== null ? localStorage.getItem(control.id) === "true" : false
+            } else {
+                control.value = parseInt(localStorage.getItem(control.id)) || control.value
+            }
+        })
+        window.ctrl.on("get-settings", updateFunc)
     </script>
 </body>
 </html>

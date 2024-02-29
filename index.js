@@ -5,6 +5,13 @@ const path = require("path");
 
 app.allowRendererProcessReuse = true
 
+const dataPath = path.join(__dirname, "viz-data")
+app.setAppLogsPath(path.join(dataPath, "logs"))
+app.setPath("userData", dataPath)
+app.setPath("appData", dataPath)
+app.setPath("temp", path.join(dataPath, "temp"))
+app.setPath("logs", path.join(dataPath, "logs"))
+
 
 let win
 

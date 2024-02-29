@@ -19,6 +19,9 @@ function openControlWin(){
     return controlWin
 }
 function controlWinWrapper(win, ctrlWin){
+    win.on("close", () => {
+        ctrlWin.close()
+    })
     ipcMain.on("ctrl", (_, data) => {
         ctrlWin.webContents.send(data.channel, data.message)
     })

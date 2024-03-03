@@ -5,82 +5,39 @@
     <title>Viz Control</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body{
-            margin: 0;
-            padding: 0;
-            background: #222;
-            color: white;
-            overflow: auto;
-        }
-        .container{
-            display: flex;
-        }
-        #preset-list{
-            height: 100vh;
-            width: 350px;
-            overflow: auto;
-        }
-        #preset-list div:hover{
-            background: #444;
-            cursor: pointer;
-        }
-        #preset-list div.current{
-            background: #2a2;
-        }
-        #preset-list div.selected{
-            background: #33f;
-        }
-        #options{
-            flex-grow: 1;
-            padding: 10px;
-        }
-        #input-selected-preset{
-            width: 100%;
-            padding: 5px;
-            background: #333;
-            color: white;
-            border: none;
-        }
-        div.list{
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        .button-holder{
-            display: flex;
-            flex-direction: row;
-            justify-content: space-evenly;
-        }
-        .button-holder div{
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex-grow: 1;
-        }
-        .button-holder div button{
-            width: 100%;
-            height: 100px;
-        }
-        .button-holder div input{
-            width: 60%;
-        }
-    </style>
+    <link rel="stylesheet" href="../static/controlWin.css">
+    <script src="../static/controlWin.js" defer></script>
 </head>
 <body>
     <div class="container">
-        <div id="preset-list"></div>
+        <div id="preset-list">
+            <input type="search" placeholder="Loading presets...">
+        </div>
         <div id="options">
-            <h4>Options</h4>
-            <label>
-                <input type="checkbox" id="check-auto-scroll-current">
-                Auto scroll to current preset
-            </label>
+            <div class="list">
+                <label>
+                    <input type="checkbox" id="check-auto-scroll-current">
+                    Auto scroll to current preset
+                </label>
+                <label>
+                    <input type="checkbox" id="check-auto-select-current">
+                    Auto select current preset
+                </label>
+            </div>
             <hr/>
             <label>
-                Selected Preset: <button id="button-selected-preset-switch" disabled>Switch</button>
+                Selected Preset: <span>None selected</span><br/>
+                <button id="button-selected-preset-switch" disabled>Switch</button>
+                <button id="button-selected-preset-exclude" disabled>Exclude</button>
+                <button id="button-selected-preset-include" disabled>Include</button>
+                <button id="button-selected-preset-clear" disabled>Clear</button>
                 <input type="text" id="input-selected-preset" readonly>
             </label>
+            <hr/>
+            <div class="button-holder">
+                <button id="button-preset-next">Next Preset</button>
+            </div>
+            <hr/>
             <div class="list">
                 <label>
                     <input type="checkbox" id="check-auto-switch">
@@ -118,7 +75,7 @@
                 <button id="button-overlay">Set Overlay</button>
             </div>
             <hr/>
-            <div class="button-holder" id="overlay-sample-input">
+            <div class="button-holder" id="overlay-sample-holder">
                 <template>
                     <button></button>
                     <input type="file">
@@ -126,112 +83,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        let presets = {}
-        const presetList = document.querySelector("#preset-list")
-
-        const autoScrollCheckbox = document.querySelector("#check-auto-scroll-current")
-        const selectedPresetSwitchButton = document.querySelector("#button-selected-preset-switch")
-        const selectedPresetInput = document.querySelector("#input-selected-preset")
-        const autoSwitchCheckbox = document.querySelector("#check-auto-switch")
-        const autoSwitchRandomCheckbox = document.querySelector("#check-auto-switch-random")
-        const autoSwitchWeightedRandomCheckbox = document.querySelector("#check-auto-switch-weighted-random")
-        const autoSwitchPenalizeCheckbox = document.querySelector("#check-auto-switch-penalize")
-        const cycleTimeInput = document.querySelector("#input-cycle-time")
-        const blendTimeInput = document.querySelector("#input-blend-time")
-        const overlayInput = document.querySelector("#text-overlay")
-        const overlayButton = document.querySelector("#button-overlay")
-        const overlayDurationInput = document.querySelector("#input-overlay-duration")
-        // const overlay
-
-        // default to checked
-        autoScrollCheckbox.checked = true
-
-        window.ctrl.on("presets-ready", respPresets => {
-            presetList.childNodes.forEach(e => e.remove())
-            presets = respPresets
-
-            Object.keys(presets).map(preset => {
-                let newElem = document.createElement("div")
-
-                newElem.textContent = preset
-                newElem.setAttribute("data-preset", preset)
-                newElem.addEventListener("click", () => {
-                    presetList.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"))
-                    newElem.classList.add("selected")
-                    selectedPresetInput.value = preset
-                    selectedPresetSwitchButton.disabled = false
-                })
-
-                presetList.append(newElem)
-            })
-        })
-        window.ctrl.on("preset-select", presetName => {
-            presetList.querySelectorAll(".current").forEach(e => e.classList.remove("current"))
-            let preset = presetList.querySelector(`[data-preset="${presetName}"]`)
-            if(preset) {
-                preset.classList.remove("selected")
-                preset.classList.add("current")
-                if(!autoScrollCheckbox.checked) return
-                preset.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center"
-                })
-            }
-        })
-
-        selectedPresetSwitchButton.addEventListener("click", () => {
-            window.ctrl.sendToWin("preset-select", selectedPresetInput.value)
-        })
-
-
-        const updateVars = [
-            autoSwitchCheckbox,
-            autoSwitchRandomCheckbox,
-            autoSwitchWeightedRandomCheckbox,
-            autoSwitchPenalizeCheckbox,
-            cycleTimeInput,
-            blendTimeInput
-        ]
-        function updateFunc(){
-            window.ctrl.sendToWin("settings-change", {
-                presetCycle: autoSwitchCheckbox.checked,
-                presetRandom: autoSwitchRandomCheckbox.checked,
-                weightedRandom: autoSwitchWeightedRandomCheckbox.checked,
-                penalizeSelected: autoSwitchPenalizeCheckbox.checked,
-                presetCycleLength: cycleTimeInput.value,
-                blendTime: blendTimeInput.value
-            })
-        }
-        updateVars.forEach(control => {
-            control.addEventListener("change", updateFunc)
-            control.addEventListener("change", () => {
-                localStorage.setItem(control.id, control.type === "checkbox" ? control.checked : control.value.toString())
-            })
-            if(control.type === "checkbox") {
-                control.checked = localStorage.getItem(control.id) !== null ? localStorage.getItem(control.id) === "true" : false
-            } else {
-                control.value = parseInt(localStorage.getItem(control.id)) || control.value
-            }
-        })
-        window.ctrl.on("get-settings", updateFunc)
-
-        function sendOverlay(){
-            window.ctrl.sendToWin("set-overlay", {
-                text: overlayInput.value,
-                duration: overlayDurationInput.value
-            })
-        }
-        overlayButton.addEventListener("click", sendOverlay)
-        overlayInput.addEventListener("keydown", e => {
-            if(e.key !== "Enter") return
-            e.preventDefault()
-            sendOverlay()
-        })
-        overlayDurationInput.addEventListener("input", () => {
-            overlayDurationInput.nextElementSibling.textContent = overlayDurationInput.value + "ms"
-        })
-    </script>
 </body>
 </html>

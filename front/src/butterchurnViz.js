@@ -168,7 +168,7 @@ class ButterChurnViz{
             this.visualizer.connectAudio(gainNode)
         }).catch(err => {
             console.error(err)
-            alert("Error getting desktop audio input")
+            alert("Error getting desktop audio input\nIs this a USB audio device? If so, try using the mic input instead.")
         })
     }
 
@@ -209,6 +209,14 @@ class ButterChurnViz{
         this.preset = presetName
         this.visualizer.loadPreset(this.presets[presetName], this.blendTime)
         this._callListener("preset-select", presetName)
+    }
+    includePreset(presetName){
+        this.presets[presetName].excluded = false
+        this._callListener("preset-include", presetName)
+    }
+    excludePreset(presetName){
+        this.presets[presetName].excluded = true
+        this._callListener("preset-exclude", presetName)
     }
 
     restartCycleInterval() {

@@ -10,6 +10,14 @@ canvas.height = window.outerHeight
 let visualizer
 
 
+window.addEventListener("resize", () => {
+    if(!visualizer || !visualizer.visualizer) return
+    canvas.width = window.outerWidth
+    canvas.height = window.outerHeight
+    visualizer.visualizer.setRendererSize(window.outerWidth, window.outerHeight)
+})
+
+
 window.onReady(() => {
     if (visualizer && visualizer.rendering) return
 
@@ -19,12 +27,32 @@ window.onReady(() => {
     )
 
     window.ctrl.sendToCtrl("presets-ready", visualizer.presets)
-    visualizer.on("preset-select", presetIndex => {
-        window.ctrl.sendToCtrl("preset-select", presetIndex)
+    visualizer.on("preset-select", preset => {
+        window.ctrl.sendToCtrl("preset-select", preset)
+    })
+    visualizer.on("preset-exclude", preset => {
+        window.ctrl.sendToCtrl("preset-exclude", preset)
+    })
+    visualizer.on("preset-include", preset => {
+        window.ctrl.sendToCtrl("preset-include", preset)
     })
 
-    window.ctrl.on("preset-select", presetIndex => {
-        visualizer.setPreset(presetIndex)
+    window.ctrl.on("get-presets", () => {
+        window.ctrl.sendToCtrl("presets-ready", visualizer.presets)
+    })
+    window.ctrl.on("preset-select", preset => {
+        if(!visualizer || !visualizer.visualizer) return
+        visualizer.setPreset(preset)
+    })
+    window.ctrl.on("preset-exclude", preset => {
+        visualizer.excludePreset(preset)
+    })
+    window.ctrl.on("preset-include", preset => {
+        visualizer.includePreset(preset)
+    })
+    window.ctrl.on("preset-next", () => {
+        if(!visualizer || !visualizer.visualizer) return
+        visualizer.nextPreset()
     })
     window.ctrl.on("settings-change", settings => {
         for(let key in settings){
@@ -43,6 +71,7 @@ window.onReady(() => {
     })
 })
 
+
 document.querySelector("div.controls").innerHTML = `
     Controls:
     d: toggle debug
@@ -56,20 +85,16 @@ function hideControls(){
     document.querySelector("div.controls").style.display = "none"
 }
 document.addEventListener("keydown", e => {
-
     switch(e.key){
         case "d":
             sessionStorage.setItem("debug", (sessionStorage.getItem("debug") !== "true").toString())
             break;
-
         case "f":
             canvas.requestFullscreen()
             break;
-
         case "Escape":
             document.exitFullscreen()
             break;
-
         case "c":
             hideControls()
             if(visualizer){

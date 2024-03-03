@@ -1,0 +1,73 @@
+body{
+    margin: 0;
+    padding: 0;
+    background: #222;
+    color: white;
+    overflow: auto;
+}
+.container{
+    display: flex;
+}
+#preset-list{
+    height: 100vh;
+    width: 350px;
+    min-width: 350px;
+    overflow: auto;
+}
+#preset-list input{
+    width: 100%;
+    padding: 5px;
+    background: #333;
+    color: white;
+    border: none;
+}
+#preset-list div:hover{
+    background: #444;
+    cursor: pointer;
+}
+#preset-list div.current{
+    background: #2a2;
+}
+#preset-list div.excluded{
+    color: #666;
+}
+#preset-list div.selected{
+    background: #33f;
+}
+#options{
+    flex-grow: 1;
+    padding: 10px;
+}
+#input-selected-preset{
+    width: 100%;
+    padding: 5px;
+    background: #333;
+    color: white;
+    border: none;
+}
+div.list{
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+}
+.button-holder{
+    flex-grow: 1;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+.button-holder div{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 1;
+}
+.button-holder div button{
+    flex-grow: 1;
+    height: 80px;
+    text-wrap: normal;
+    word-wrap: anywhere;
+}
+.button-holder div input{
+    width: 100%;
+}

@@ -43,8 +43,11 @@ document.querySelector("div.controls").innerHTML = `
     m: use mic
     s: stop rendering
 `.replace(/\n/g, "<br>")
-document.addEventListener("keydown", e => {
+function hideControls(){
     document.querySelector("div.controls").style.display = "none"
+}
+document.addEventListener("keydown", e => {
+
     switch(e.key){
         case "d":
             sessionStorage.setItem("debug", (sessionStorage.getItem("debug") !== "true").toString())
@@ -59,11 +62,13 @@ document.addEventListener("keydown", e => {
             break;
 
         case "c":
+            hideControls()
             if(visualizer){
                 visualizer.startPlayer("capture")
             }
             break;
         case "m":
+            hideControls()
             if(visualizer){
                 visualizer.startPlayer("mic")
             }

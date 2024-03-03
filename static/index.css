@@ -3,6 +3,7 @@ root, body{
     padding: 0;
     overflow: hidden;
     background-color: transparent;
+    cursor: none;
 }
 canvas{
     background-color: transparent;
@@ -33,7 +34,7 @@ div#overlay{
     opacity: 0;
     transition: opacity 0.5s;
     font-family: Arial, sans-serif;
-    font-size: 2rem;
+    font-size: 12vw;
 }
 div#overlay.visible{
     opacity: 1;

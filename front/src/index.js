@@ -90,7 +90,7 @@ document.addEventListener("keydown", e => {
             sessionStorage.setItem("debug", (sessionStorage.getItem("debug") !== "true").toString())
             break;
         case "f":
-            canvas.requestFullscreen()
+            document.body.requestFullscreen()
             break;
         case "Escape":
             document.exitFullscreen()
